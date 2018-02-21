@@ -10,16 +10,21 @@ namespace TestScraper
 {
     public class BaliFlights
     {
+        public BaliFlights()
+        {
 
-        public void GetHtmlJs()
+        }
+
+        public string GetHtmlJs()
         {
             using (WebBrowser wb = new WebBrowser())
             {
+                string text = "";
                 bool isWorking = false;
                 while (!isWorking)
                 {
                     wb.ScriptErrorsSuppressed = true;
-                    wb.Navigate("https://www.skyscanner.com/transport/flights/cmha/dps/180221/180228?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results");
+                    wb.Navigate("https://www.skyscanner.com/transport/flights/cmh/dps/180221/180228?adults=2&children=0&adultsv2=2&childrenv2=&infants=0&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results");
 
                     while (wb.ReadyState != WebBrowserReadyState.Complete)
                     {
@@ -34,14 +39,14 @@ namespace TestScraper
                     }
                 }
 
-                string text = wb.Document.GetElementsByTagName("tbody")[0].OuterHtml;
+                //string text = wb.Document.GetElementsByTagName("tbody")[0].OuterHtml;
+                text = wb.Document.GetElementsByTagName("tbody")[0].OuterHtml.Substring(349, 6);
 
-
-                using (StreamWriter sr = new StreamWriter("FlightLog.txt", false))
-                {
-                    sr.Write(text);
-                }
-
+                //using (StreamWriter sr = new StreamWriter("FlightLog.txt", false))
+                //{
+                //    sr.Write(text);
+                //}
+                return text;
             }
         }
 

@@ -14,9 +14,6 @@ namespace TestScraper
     {
 
 
-
-
-
         public BaliSurfTrip()
         {
 
@@ -61,12 +58,13 @@ namespace TestScraper
         {
             LogSurfHeight();
             LogDates();
-
+            BaliFlights flights = new BaliFlights();
+            string flightPrice = flights.GetHtmlJs();
 
 
             List<string> sizes = new List<string>();
             List<string> dates = new List<string>();
-            List<string> flights = new List<string>();
+           
             using (StreamReader sizesSr = new StreamReader("SizeLog.txt"))
             {
                 using (StreamReader datesSr = new StreamReader("DateLog.txt"))
@@ -84,21 +82,31 @@ namespace TestScraper
 
                 }
             }
-            for (int i = 0; i < dates.Count; i++)
-            {
+            //for (int i = 0; i < dates.Count; i++)
+            //{
 
 
-                if (int.Parse(sizes[i].Substring(0, 1)) > 4)
+                if (int.Parse(sizes[0].Substring(0, 1)) > 4)
                 {
-                    Console.WriteLine($"There is a roundtrip flight to Bali for $??? on {dates[i]} and the waves are {sizes[i]} the rest of the week.\nYou should book a flight! ");
-                    Console.WriteLine("-------------------------------------------------------------------------------------------------------------");
+                    Console.WriteLine($"There is a roundtrip flight to Bali for {flightPrice} on {dates[0]} and the waves are {sizes[0]} the rest of the week.\nYou should book a flight! ");
+                    Console.WriteLine("--------------------------------------------------------------------------------------------------------------------");
+                }
+                else if (int.Parse(sizes[1].Substring(0, 1)) > 4)
+                {
+                    Console.WriteLine($"There is a roundtrip flight to Bali for {flightPrice} on {dates[0]} and the waves are {sizes[1]} the rest of the week.\nYou should book a flight! ");
+                    Console.WriteLine("--------------------------------------------------------------------------------------------------------------------");
+                }
+                else if (int.Parse(sizes[2].Substring(0, 1)) > 4)
+                {
+                    Console.WriteLine($"There is a roundtrip flight to Bali for {flightPrice} on {dates[0]} and the waves are {sizes[2]} the rest of the week.\nYou should book a flight! ");
+                    Console.WriteLine("--------------------------------------------------------------------------------------------------------------------");
                 }
                 else
                 {
-                    Console.WriteLine($"Bali has small waves on {dates[i]}, don't bother flying there for $???.");
-                    Console.WriteLine("-------------------------------------------------------------------------------------------------------------");
+                    Console.WriteLine($"Bali has small waves this week, don't bother flying there for {flightPrice}.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                 }
-            }
+            //}
             Console.ReadLine();
 
         }
