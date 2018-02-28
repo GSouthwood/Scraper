@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Configuration;
 
 
 
@@ -13,9 +14,11 @@ namespace TestScraper
         [STAThread]
         static void Main(string[] args)
         {
-            
-            BaliSurfTrip trip = new BaliSurfTrip();
-            trip.GetSurfHeight();
+           string connectionString = ConfigurationManager.ConnectionStrings["ScraperDatabase"].ConnectionString;
+           FlightsSql Flights = new FlightsSql(connectionString);
+           Flights.WritePrices();
+           Console.ReadLine();
+
 
         }
     }

@@ -10,11 +10,11 @@ using System.Threading;
 
 namespace TestScraper
 {
-    public class BaliSurfTrip
+    public class SurfHeightSql
     {
+        private string connectionString;
 
-
-        public BaliSurfTrip()
+        public SurfHeightSql()
         {
 
 
@@ -58,8 +58,8 @@ namespace TestScraper
         {
             LogSurfHeight();
             LogDates();
-            BaliFlights flights = new BaliFlights();
-            string flightPrice = flights.GetHtmlJs();
+            FlightsSql flights = new FlightsSql(connectionString);
+            string flightPrice = "nada";
 
 
             List<string> sizes = new List<string>();
