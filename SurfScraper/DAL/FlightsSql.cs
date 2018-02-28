@@ -75,7 +75,7 @@ namespace TestScraper
         }
 
         //scrape prices from SkyScanner
-        public List<string> ScrapePrice()
+        public List<decimal> ScrapePrice()
         {
             FlightsSql flightsSql = new FlightsSql(connectionString);
             List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape();
@@ -83,9 +83,10 @@ namespace TestScraper
             using (WebBrowser wb = new WebBrowser())
             {
                 string text = "";
+                decimal price = 0;
                 bool isWorking = false;
                 int count = 0;
-                List<string> prices = new List<string>();
+                List<decimal> prices = new List<decimal>();
                 
                 foreach (var url in destinations)
                 {
@@ -110,16 +111,17 @@ namespace TestScraper
                     }
 
 
-                    text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(4, 7);
+                    text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, 7);
                     if (text.Contains(" "))
                     {
                         int limit = text.IndexOf(" ");
-                        text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(4, limit);
+                        text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, limit);
+                        price = Decimal.Parse(text);
                     }
                     
-                    prices.Add(text);
+                    prices.Add(price);
                     count++;
-                    Console.WriteLine($"{count}/{destinations.Count}. Done");
+                    Console.WriteLine($"{count}/{destinations.Count} Done.");
 
                 }
                 return prices;
@@ -131,7 +133,7 @@ namespace TestScraper
             FlightsSql flightsSql = new FlightsSql(connectionString);
             List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape();
             
-            List<string> prices = ScrapePrice();
+            List<decimal> prices = ScrapePrice();
             
             try
             {
