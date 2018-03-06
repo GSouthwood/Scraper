@@ -53,6 +53,7 @@
     <Compile Include="DAL\FlightsSql.cs" />
     <Compile Include="Model\FlightUrl.cs" />
     <Compile Include="LocationInformation.cs" />
+    <Compile Include="Model\SurfUrl.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DAL\SurfHeightSql.cs" />

@@ -16,8 +16,8 @@ namespace TestScraper
     public class FlightsSql
     {
         //SQL command for inseting flight info into Flight table 
-        private const string SQL_WriteFlightInfo = "INSERT INTO Flight (price, origin_airport_code, departure_date, return_date, airport_code) " +
-            "VALUES (@price, @originCode, @departureDate, @returnDate, @destinationCode);";
+        private const string SQL_WriteFlightInfo = "INSERT INTO Flight (price, origin_airport_code, departure_date, return_date, airport_code, log_date) " +
+            "VALUES (@price, @originCode, @departureDate, @returnDate, @destinationCode, @logTime);";
         private const string SQL_LoadDestinations = "SELECT airport_code, name, location_id FROM Destination";
         private string connectionString;
         
@@ -30,7 +30,9 @@ namespace TestScraper
             connectionString = databaseconnectionString;
         }
 
-        //Take in all of the destination data from Scraper and load into a list of skyscanner URL's to scrape 
+        //Take in all of the destination data from Scraper and load into a list of skyscanner URL's to scrape
+        //any number of destinations can be loaded from database without having to change this method
+        //which means the method for scraping data will never have to change, only the database
         public List<FlightUrl> LoadDestinationsToScrape()
         {
             List<FlightUrl> destinations = new List<FlightUrl>();
@@ -151,6 +153,7 @@ namespace TestScraper
                         cmd.Parameters.AddWithValue("@departureDate", GetDepartureDate());
                         cmd.Parameters.AddWithValue("@returnDate", GetReturnDate());
                         cmd.Parameters.AddWithValue("@destinationCode", destinations[i].DestinationAirportCode);
+                        cmd.Parameters.AddWithValue("@logTime", GetCurrentTime());
                         cmd.ExecuteNonQuery();
                         
                         
@@ -165,11 +168,15 @@ namespace TestScraper
         }
         public static DateTime GetDepartureDate()
         {
-            return DateTime.Now.AddDays(14);
+            return DateTime.Now.AddDays(5);
         }
         public static DateTime GetReturnDate()
         {
-            return DateTime.Now.AddDays(21);
+            return DateTime.Now.AddDays(12);
+        }
+        public static DateTime GetCurrentTime()
+        {
+            return DateTime.Now.Date;
         }
     }
 
