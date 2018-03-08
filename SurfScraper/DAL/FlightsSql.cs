@@ -102,7 +102,7 @@ namespace TestScraper
                         while (wb.ReadyState != WebBrowserReadyState.Complete)
                         {
                             Application.DoEvents();
-                            Thread.Sleep(2000);
+                            Thread.Sleep(20000);
                             Application.DoEvents();
 
                         }
@@ -176,7 +176,7 @@ namespace TestScraper
         }
         public static DateTime GetCurrentTime()
         {
-            return DateTime.Now.Date;
+            return DateTime.Now;
         }
     }
 

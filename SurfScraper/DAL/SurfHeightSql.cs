@@ -99,12 +99,6 @@ namespace TestScraper
                 {
                     throw;
                 }
-
-
-                //Gotta finish figuring out how to store the scraped data to then be put into the right data
-                //in Scraper
-                //create a DateTime method that gets the date for each set of 8 entries and the times associated with each entry
-                //make sure the last entry only has 7 and keep track of everything with counters (may be a little complicated)
                 foreach (var item in surfSize)
                 {
                     counter++;
@@ -125,45 +119,19 @@ namespace TestScraper
 
             return surf;
         }
-        //Method for getting weather data from magicseaweed 
-        //buggy
-        public List<string> LogWeatherData()
-        {
-
-            HtmlWeb web = new HtmlWeb();
-            List<HtmlNode> weatherNodes = new List<HtmlNode>();
-            List<string> weather = new List<string>();
-            HtmlAgilityPack.HtmlDocument doc = web.Load("https://magicseaweed.com/Uluwatu-Surf-Report/565/");
-            try
-            {
-                weatherNodes = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[12]/span").ToList();
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-            foreach (var item in weatherNodes)
-            {
-                weather.Add(item.InnerText);
-            }
-
-
-            return weather;
-
-
-        }
+        
         public void LogSurfData()
         {
             //total log count
-            int counter1 = 0;
+            int totalLogCount = 0;
             //total log spot start count
-            int counter5 = 8;
+            int totalLogPerSpotStartCount = 8;
             //spot log count
-            int counter2 = 0;
+            int totalLogPerSpotCount = 0;
             //day count
-            int counter3 = 0;
+            int dayCount = 0;
             //time count
-            int counter4 = 0;
+            int timeCount = 0;
             //load list of date times
             List<TimeSpan> times = LoadTimes();
             SurfHeightSql surfSql = new SurfHeightSql(connectionString);
@@ -180,62 +148,60 @@ namespace TestScraper
                     {
 
 
-                        while (counter2 < 79)
+                        while (totalLogPerSpotCount < 79)
                         {
 
-                            if (counter2 == 72)
+                            if (totalLogPerSpotCount == 72)
                             {
-                                counter4 = 0;
-                                for (int i = counter1; i < counter5 - 1; i++)
+                                timeCount = 0;
+                                for (int i = totalLogCount; i < totalLogPerSpotStartCount - 1; i++)
                                 {
 
                                     
-                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);
-                                    //@waveHeight, @logDate, @locationId, @spotName, @forecastForDate, @ForecastForTime, @spotId
+                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);                                    
                                     cmd.Parameters.AddWithValue("@waveHeight", surf[i]);
                                     cmd.Parameters.AddWithValue("@logDate", CurrentDate());
                                     cmd.Parameters.AddWithValue("@locationId", item.LocationId);
                                     cmd.Parameters.AddWithValue("@spotName", item.SpotName);
-                                    cmd.Parameters.AddWithValue("@forecastForDate", CurrentDate().AddDays(counter3));
-                                    cmd.Parameters.AddWithValue("@ForecastForTime", times[counter4]);
+                                    cmd.Parameters.AddWithValue("@forecastForDate", CurrentDate().AddDays(dayCount));
+                                    cmd.Parameters.AddWithValue("@ForecastForTime", times[timeCount]);
                                     cmd.Parameters.AddWithValue("@spotId", item.SpotId);
                                     cmd.ExecuteNonQuery();
-                                    counter2++;
-                                    counter4++;
+                                    totalLogPerSpotCount++;
+                                    timeCount++;
                                 }
                                 
                             }
                             else
                             {
-                                counter4 = 0;
-                                for (int i = counter1; i < counter5; i++)
+                                timeCount = 0;
+                                for (int i = totalLogCount; i < totalLogPerSpotStartCount; i++)
                                 {
 
 
-                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);
-                                    //@waveHeight, @logDate, @locationId, @spotName, @forecastForDate, @ForecastForTime, @spotId
+                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);                                   
                                     cmd.Parameters.AddWithValue("@waveHeight", surf[i]);
                                     cmd.Parameters.AddWithValue("@logDate", CurrentDate());
                                     cmd.Parameters.AddWithValue("@locationId", item.LocationId);
                                     cmd.Parameters.AddWithValue("@spotName", item.SpotName);
-                                    cmd.Parameters.AddWithValue("@forecastForDate", CurrentDate().AddDays(counter3));
-                                    cmd.Parameters.AddWithValue("@ForecastForTime", times[counter4].ToString());
+                                    cmd.Parameters.AddWithValue("@forecastForDate", CurrentDate().AddDays(dayCount));
+                                    cmd.Parameters.AddWithValue("@ForecastForTime", times[timeCount].ToString());
                                     cmd.Parameters.AddWithValue("@spotId", item.SpotId);
                                     cmd.ExecuteNonQuery();
 
-                                    counter2++;
-                                    counter4++;
+                                    totalLogPerSpotCount++;
+                                    timeCount++;
                                 }
                                 
 
                             }
-                            counter3++;
-                            counter1 += 7;
-                            counter5 += 7;
+                            dayCount++;
+                            totalLogCount += 7;
+                            totalLogPerSpotStartCount += 7;
                         }
 
-                        counter2 = 0;
-                        counter3 = 0;
+                        totalLogPerSpotCount = 0;
+                        dayCount = 0;
                     }
                 }
             }
@@ -244,6 +210,37 @@ namespace TestScraper
 
                 throw;
             }
+        }
+        //Method for getting weather data from magicseaweed 
+        //buggy
+        public List<string> LogWeatherData()
+        {
+
+            HtmlWeb web = new HtmlWeb();
+            List<HtmlNode> weatherNodes = new List<HtmlNode>();
+            List<string> weather = new List<string>();
+            HtmlAgilityPack.HtmlDocument doc = web.Load("https://magicseaweed.com/Uluwatu-Surf-Report/565/");
+            try
+            {
+                weatherNodes = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[12]/span").ToList();
+                if (weatherNodes[0].InnerText.Contains("s"))
+                {
+                    weatherNodes = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[13]/span").ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            foreach (var item in weatherNodes)
+            {
+                weather.Add(item.InnerText);
+            }
+
+
+            return weather;
+
+
         }
         public static List<TimeSpan> LoadTimes()
         {
