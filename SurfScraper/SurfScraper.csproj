@@ -56,6 +56,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DAL\SurfHeightSql.cs" />
+    <Compile Include="ScrapeMethods\Flight.cs" />
+    <Compile Include="ScrapeMethods\Surf.cs" />
+    <Compile Include="UtilityMethods\Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

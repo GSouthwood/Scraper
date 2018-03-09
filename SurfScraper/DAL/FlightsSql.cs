@@ -1,13 +1,9 @@
-﻿using System.Text;
-using System.Threading.Tasks;
-using HtmlAgilityPack;
-using System.IO;
-using System.Windows.Forms;
-using System.Threading;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using System.Collections.Generic;
 using SurfScraper.Model;
 using System;
+using SurfScraper.ScrapeMethods;
+using SurfScraper.UtilityMethods;
 
 
 
@@ -49,19 +45,25 @@ namespace TestScraper
                     SqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
-                        FlightUrl f = new FlightUrl();
-                        f.DestinationAirportCode = Convert.ToString(reader["airport_code"]);
-                        f.LocationName = Convert.ToString(reader["name"]);
-                        f.LocationId = Convert.ToInt32(reader["location_id"]);
-                        f.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
-                        f.DepartureDate = GetDepartureDate().ToString("/yyMMdd/");
-                        f.ReturnDate = GetReturnDate().ToString("yyMMdd");
-                        f.SkyScannerVariables = "?adults=2&children=0&adultsv2=2&childrenv2=&infants=0&" +
-                            "cabinclass=economy&rtn=1&preferdirects=false&" +
-                            "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
+                        for (int i = 0; i < 5; i++)
+                        {
 
-                        destinations.Add(f);
-                        
+
+                            FlightUrl f = new FlightUrl();
+                            f.DestinationAirportCode = Convert.ToString(reader["airport_code"]);
+                            f.LocationName = Convert.ToString(reader["name"]);
+                            f.LocationId = Convert.ToInt32(reader["location_id"]);
+                            f.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
+                            f.DepartureDate = Utility.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
+                            f.ReturnDate = Utility.GetReturnDate().ToString("yyMMdd");
+                            f.SkyScannerVariables = "?adults=2&children=0&adultsv2=2&childrenv2=&infants=0&" +
+                                "cabinclass=economy&rtn=1&preferdirects=false&" +
+                                "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
+                            f.Depart = Utility.GetDepartureDate().AddDays(i);
+                            f.Return = Utility.GetReturnDate();
+
+                            destinations.Add(f);
+                        }
                     }
 
                 }
@@ -76,66 +78,16 @@ namespace TestScraper
 
         }
 
-        //scrape prices from SkyScanner
-        public List<decimal> ScrapePrice()
-        {
-            FlightsSql flightsSql = new FlightsSql(connectionString);
-            List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape();
 
-            using (WebBrowser wb = new WebBrowser())
-            {
-                string text = "";
-                decimal price = 0;
-                bool isWorking = false;
-                int count = 0;
-                List<decimal> prices = new List<decimal>();
-                
-                foreach (var url in destinations)
-                {
-                    isWorking = false;
-                    Console.WriteLine($"Trying {url.DestinationAirportCode}...");
-                    while (!isWorking)
-                    {
-                        wb.ScriptErrorsSuppressed = true;
-                        wb.Navigate($"{url}");
-                        
-                        while (wb.ReadyState != WebBrowserReadyState.Complete)
-                        {
-                            Application.DoEvents();
-                            Thread.Sleep(20000);
-                            Application.DoEvents();
-
-                        }
-                        if (wb.Document.GetElementsByTagName("tbody").Count > 0)
-                        {
-                            isWorking = true;
-                        }
-                    }
-
-
-                    text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, 7);
-                    if (text.Contains(" "))
-                    {
-                        int limit = text.IndexOf(" ");
-                        text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, limit);
-                        price = Decimal.Parse(text);
-                    }
-                    
-                    prices.Add(price);
-                    count++;
-                    Console.WriteLine($"{count}/{destinations.Count} Done.");
-
-                }
-                return prices;
-            }
-        }
         // Insert flights rows into Scraper
         public void WritePrices()
         {
             FlightsSql flightsSql = new FlightsSql(connectionString);
             List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape();
-            
-            List<decimal> prices = ScrapePrice();
+
+            //Flight object for flight methods
+            Flight flight = new Flight();
+            List<decimal> prices = flight.ScrapePrice();
             
             try
             {
@@ -150,10 +102,10 @@ namespace TestScraper
 
                         cmd.Parameters.AddWithValue("@price", prices[i]);
                         cmd.Parameters.AddWithValue("@originCode", "LAX");
-                        cmd.Parameters.AddWithValue("@departureDate", GetDepartureDate());
-                        cmd.Parameters.AddWithValue("@returnDate", GetReturnDate());
+                        cmd.Parameters.AddWithValue("@departureDate", destinations[i].Depart);
+                        cmd.Parameters.AddWithValue("@returnDate", destinations[i].Return);
                         cmd.Parameters.AddWithValue("@destinationCode", destinations[i].DestinationAirportCode);
-                        cmd.Parameters.AddWithValue("@logTime", GetCurrentTime());
+                        cmd.Parameters.AddWithValue("@logTime", Utility.CurrentDateTime());
                         cmd.ExecuteNonQuery();
                         
                         
@@ -166,18 +118,7 @@ namespace TestScraper
                 throw;
             }
         }
-        public static DateTime GetDepartureDate()
-        {
-            return DateTime.Now.AddDays(5);
-        }
-        public static DateTime GetReturnDate()
-        {
-            return DateTime.Now.AddDays(12);
-        }
-        public static DateTime GetCurrentTime()
-        {
-            return DateTime.Now;
-        }
+        
     }
 
 }

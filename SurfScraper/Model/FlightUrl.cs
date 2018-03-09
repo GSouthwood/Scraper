@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Data.SqlClient;
+
 
 namespace SurfScraper.Model
 {
@@ -16,6 +12,8 @@ namespace SurfScraper.Model
         public string DepartureDate { get; set; }
         public string ReturnDate { get; set; }
         public string SkyScannerVariables { get; set; }
+        public DateTime Depart { get; set; }
+        public DateTime Return { get; set; }
              
         public override string ToString()
         {
