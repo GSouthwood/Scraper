@@ -18,8 +18,8 @@ namespace TestScraper
 
         private string connectionString;
         private const string SQL_LoadSpots = "SELECT spot_name, spot_id, location_id FROM Spot";
-        private const string SQL_WriteSurfInfo = "  INSERT INTO Surf (wave_height_feet, log_date, location_id, spot_name, forecast_for_date, forecast_for_time, spot_id)" +
-            " VALUES (@waveHeight, @logDate, @locationId, @spotName, @forecastForDate, @ForecastForTime, @spotId);";
+        private const string SQL_WriteSurfInfo = "  INSERT INTO Surf (swell_height_feet, log_date, location_id, spot_name, forecast_for_date, spot_id)" +
+            " VALUES (@swellHeight, @logDate, @locationId, @spotName, @forecastForDate, @spotId);";
 
         public SurfHeightSql(string databaseconnectionString)
         {
@@ -67,24 +67,128 @@ namespace TestScraper
         }
 
         
-        public void LogSurfData()
+        //public void LogSurfData()
+        //{
+        //    //these counters all work together to allow for effective scraping 
+        //    //total log count
+        //    int totalLogCount = 0;
+
+        //    //total log spot start count
+        //    int totalLogPerSpotStartCount = 8;
+
+        //    //spot log count
+        //    int totalLogPerSpotCount = 0;
+
+        //    //day count
+        //    int dayCount = 0;
+
+        //    //time count
+        //    int timeCount = 0;
+
+
+        //    //load list of date times
+        //    List<TimeSpan> times = Utility.LoadTimes();
+
+        //    //load list of spots
+        //    SurfHeightSql surfSql = new SurfHeightSql(connectionString);
+        //    List<SurfUrl> spots = surfSql.LoadSpotsToScrape();
+
+
+        //    //load list of surf heights
+        //    Surf surf = new Surf();
+        //    List<decimal> surfHeight = surf.ScrapeSurfHeight();
+
+        //    try
+        //    {
+        //        using (SqlConnection conn = new SqlConnection(connectionString))
+        //        {
+        //            conn.Open();
+        //            foreach (var item in spots)
+        //            {
+
+        //                //there are 79 nodes of data to scrape per page
+        //                //(10 days and 8 forecast nodes per day) except
+        //                //for last day which has 7 nodes
+        //                while (totalLogPerSpotCount < 79)
+        //                {
+        //                    //this will prevent the scraping from breaking by trying to 
+        //                    //scrape the "extra" 8th node on the 10th forecast day
+        //                    //instead it will only scrape 7 
+        //                    if (totalLogPerSpotCount == 72)
+        //                    {
+        //                        timeCount = 0;
+        //                        for (int i = totalLogCount; i < totalLogPerSpotStartCount - 1; i++)
+        //                        {
+
+                                    
+        //                            SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);                                    
+        //                            cmd.Parameters.AddWithValue("@waveHeight", surfHeight[i]);
+        //                            cmd.Parameters.AddWithValue("@logDate", Utility.CurrentDateTime());
+        //                            cmd.Parameters.AddWithValue("@locationId", item.LocationId);
+        //                            cmd.Parameters.AddWithValue("@spotName", item.SpotName);
+        //                            cmd.Parameters.AddWithValue("@forecastForDate", Utility.CurrentDateTime().AddDays(dayCount));
+        //                            cmd.Parameters.AddWithValue("@ForecastForTime", times[timeCount]);
+        //                            cmd.Parameters.AddWithValue("@spotId", item.SpotId);
+        //                            cmd.ExecuteNonQuery();
+        //                            totalLogPerSpotCount++;
+        //                            timeCount++;
+        //                        }
+                                
+        //                    }
+        //                    //this is the same as above but for forecast days 1-9 which have all 8 nodes
+        //                    else
+        //                    {
+        //                        timeCount = 0;
+        //                        for (int i = totalLogCount; i < totalLogPerSpotStartCount; i++)
+        //                        {
+
+
+        //                            SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);                                   
+        //                            cmd.Parameters.AddWithValue("@waveHeight", surfHeight[i]);
+        //                            cmd.Parameters.AddWithValue("@logDate", Utility.CurrentDateTime());
+        //                            cmd.Parameters.AddWithValue("@locationId", item.LocationId);
+        //                            cmd.Parameters.AddWithValue("@spotName", item.SpotName);
+        //                            cmd.Parameters.AddWithValue("@forecastForDate", Utility.CurrentDateTime().AddDays(dayCount));
+        //                            cmd.Parameters.AddWithValue("@ForecastForTime", times[timeCount].ToString());
+        //                            cmd.Parameters.AddWithValue("@spotId", item.SpotId);
+        //                            cmd.ExecuteNonQuery();
+
+        //                            totalLogPerSpotCount++;
+        //                            timeCount++;
+        //                        }
+                                
+
+        //                    }
+        //                    dayCount++;
+        //                    totalLogCount += 7;
+        //                    totalLogPerSpotStartCount += 7;
+        //                }
+
+        //                totalLogPerSpotCount = 0;
+        //                dayCount = 0;
+        //            }
+        //        }
+        //    }
+        //    catch (SqlException ex)
+        //    {
+
+        //        throw;
+        //    }
+        //}
+        public void LogSurfData2()
         {
             //these counters all work together to allow for effective scraping 
             //total log count
             int totalLogCount = 0;
 
             //total log spot start count
-            int totalLogPerSpotStartCount = 8;
-
-            //spot log count
-            int totalLogPerSpotCount = 0;
+            int totalLogPerSpotStartCount = 7;
 
             //day count
             int dayCount = 0;
 
-            //time count
-            int timeCount = 0;
-
+            //variable to hold the average surf height per day for each spot
+            decimal averageSurfHeight = 0;
 
             //load list of date times
             List<TimeSpan> times = Utility.LoadTimes();
@@ -109,62 +213,68 @@ namespace TestScraper
                         //there are 79 nodes of data to scrape per page
                         //(10 days and 8 forecast nodes per day) except
                         //for last day which has 7 nodes
-                        while (totalLogPerSpotCount < 79)
+                        while (dayCount < 10)
                         {
                             //this will prevent the scraping from breaking by trying to 
                             //scrape the "extra" 8th node on the 10th forecast day
                             //instead it will only scrape 7 
-                            if (totalLogPerSpotCount == 72)
+                            if (dayCount == 9)
                             {
-                                timeCount = 0;
-                                for (int i = totalLogCount; i < totalLogPerSpotStartCount - 1; i++)
+                                
+                                for (int i = totalLogCount; i <= totalLogPerSpotStartCount - 1; i++)
                                 {
+                                    averageSurfHeight += surfHeight[i];
+                                }
+                                //average for the last day with only 7 nodes of forecast data
+                                    averageSurfHeight /= 7;
 
-                                    
-                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);                                    
-                                    cmd.Parameters.AddWithValue("@waveHeight", surfHeight[i]);
+                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);
+                                    cmd.Parameters.AddWithValue("@swellHeight", averageSurfHeight);
                                     cmd.Parameters.AddWithValue("@logDate", Utility.CurrentDateTime());
                                     cmd.Parameters.AddWithValue("@locationId", item.LocationId);
                                     cmd.Parameters.AddWithValue("@spotName", item.SpotName);
                                     cmd.Parameters.AddWithValue("@forecastForDate", Utility.CurrentDateTime().AddDays(dayCount));
-                                    cmd.Parameters.AddWithValue("@ForecastForTime", times[timeCount]);
                                     cmd.Parameters.AddWithValue("@spotId", item.SpotId);
                                     cmd.ExecuteNonQuery();
-                                    totalLogPerSpotCount++;
-                                    timeCount++;
-                                }
-                                
+                                    averageSurfHeight = 0;
+                                    Console.WriteLine("Inserted 1 row");
+
+                                totalLogCount += 7;
+                                totalLogPerSpotStartCount += 7;
+
+
                             }
                             //this is the same as above but for forecast days 1-9 which have all 8 nodes
                             else
                             {
-                                timeCount = 0;
-                                for (int i = totalLogCount; i < totalLogPerSpotStartCount; i++)
+                                for (int i = totalLogCount; i <= totalLogPerSpotStartCount; i++)
                                 {
+                                    averageSurfHeight += surfHeight[i];
+                                    
+                                }
+                                //average for first 9 days with only 8 nodes of forecast data
+                                averageSurfHeight /= 8;
 
-
-                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);                                   
-                                    cmd.Parameters.AddWithValue("@waveHeight", surfHeight[i]);
+                                
+                                    SqlCommand cmd = new SqlCommand(SQL_WriteSurfInfo, conn);
+                                    cmd.Parameters.AddWithValue("@swellHeight", averageSurfHeight);
                                     cmd.Parameters.AddWithValue("@logDate", Utility.CurrentDateTime());
                                     cmd.Parameters.AddWithValue("@locationId", item.LocationId);
                                     cmd.Parameters.AddWithValue("@spotName", item.SpotName);
                                     cmd.Parameters.AddWithValue("@forecastForDate", Utility.CurrentDateTime().AddDays(dayCount));
-                                    cmd.Parameters.AddWithValue("@ForecastForTime", times[timeCount].ToString());
                                     cmd.Parameters.AddWithValue("@spotId", item.SpotId);
                                     cmd.ExecuteNonQuery();
-
-                                    totalLogPerSpotCount++;
-                                    timeCount++;
-                                }
-                                
+                                    averageSurfHeight = 0;
+                                    
+                                    Console.WriteLine("Inserted 1 row");
+                                totalLogCount += 8;
+                                totalLogPerSpotStartCount += 8;
 
                             }
                             dayCount++;
-                            totalLogCount += 7;
-                            totalLogPerSpotStartCount += 7;
-                        }
+                            
 
-                        totalLogPerSpotCount = 0;
+                        }
                         dayCount = 0;
                     }
                 }
@@ -175,7 +285,7 @@ namespace TestScraper
                 throw;
             }
         }
-       
+
 
     }
 }

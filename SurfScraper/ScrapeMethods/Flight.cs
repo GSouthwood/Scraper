@@ -40,7 +40,7 @@ namespace SurfScraper.ScrapeMethods
                         while (wb.ReadyState != WebBrowserReadyState.Complete)
                         {
                             Application.DoEvents();
-                            Thread.Sleep(10000);
+                            Thread.Sleep(20000);
                             Application.DoEvents();
 
                         }

@@ -106,7 +106,12 @@ namespace TestScraper
                         cmd.Parameters.AddWithValue("@returnDate", destinations[i].Return);
                         cmd.Parameters.AddWithValue("@destinationCode", destinations[i].DestinationAirportCode);
                         cmd.Parameters.AddWithValue("@logTime", Utility.CurrentDateTime());
-                        cmd.ExecuteNonQuery();
+                        int worked = cmd.ExecuteNonQuery();
+                        if (worked > 0)
+                        {
+                            Console.WriteLine($"Input {worked} row");
+                        }
+                        
                         
                         
                     }
