@@ -175,7 +175,7 @@ namespace TestScraper
         //        throw;
         //    }
         //}
-        public void LogSurfData2()
+        public void LogSurfData()
         {
             //these counters all work together to allow for effective scraping 
             //total log count
