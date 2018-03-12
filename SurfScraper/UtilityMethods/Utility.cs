@@ -21,11 +21,11 @@ namespace SurfScraper.UtilityMethods
         }
         public static DateTime GetDepartureDate()
         {
-            return DateTime.Now.AddDays(3);
+            return DateTime.Now.AddDays(2);
         }
         public static DateTime GetReturnDate()
         {
-            return DateTime.Now.AddDays(12);
+            return DateTime.Now.AddDays(7);
         }
         
     }

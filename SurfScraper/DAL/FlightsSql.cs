@@ -45,24 +45,46 @@ namespace TestScraper
                     SqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
-                        for (int i = 0; i < 5; i++)
+                        for (int i = 0; i < 6; i++)
                         {
 
+                            
 
-                            FlightUrl f = new FlightUrl();
-                            f.DestinationAirportCode = Convert.ToString(reader["airport_code"]);
-                            f.LocationName = Convert.ToString(reader["name"]);
-                            f.LocationId = Convert.ToInt32(reader["location_id"]);
-                            f.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
-                            f.DepartureDate = Utility.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
-                            f.ReturnDate = Utility.GetReturnDate().ToString("yyMMdd");
-                            f.SkyScannerVariables = "?adults=2&children=0&adultsv2=2&childrenv2=&infants=0&" +
-                                "cabinclass=economy&rtn=1&preferdirects=false&" +
-                                "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
-                            f.Depart = Utility.GetDepartureDate().AddDays(i);
-                            f.Return = Utility.GetReturnDate();
+                            //six day trips (4 full days, 2 days travel)
+                                FlightUrl f = new FlightUrl();
+                                f.DestinationAirportCode = Convert.ToString(reader["airport_code"]);
+                                f.LocationName = Convert.ToString(reader["name"]);
+                                f.LocationId = Convert.ToInt32(reader["location_id"]);
+                                f.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
+                                f.DepartureDate = Utility.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
+                                f.ReturnDate = Utility.GetReturnDate().AddDays(i).ToString("yyMMdd");
+                                f.SkyScannerVariables = "?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&" +
+                                    "cabinclass=economy&rtn=1&preferdirects=false&" +
+                                    "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
+                                f.Depart = Utility.GetDepartureDate().AddDays(i);
+                                f.Return = Utility.GetReturnDate().AddDays(i);
 
-                            destinations.Add(f);
+                                destinations.Add(f);
+
+
+
+
+                           //seven day trips (5 full days, 2 days travel)
+                                FlightUrl f2 = new FlightUrl();
+                                f2.DestinationAirportCode = Convert.ToString(reader["airport_code"]);
+                                f2.LocationName = Convert.ToString(reader["name"]);
+                                f2.LocationId = Convert.ToInt32(reader["location_id"]);
+                                f2.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
+                                f2.DepartureDate = Utility.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
+                                f2.ReturnDate = Utility.GetReturnDate().AddDays(i+1).ToString("yyMMdd");
+                                f2.SkyScannerVariables = "?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&" +
+                                    "cabinclass=economy&rtn=1&preferdirects=false&" +
+                                    "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
+                                f2.Depart = Utility.GetDepartureDate().AddDays(i);
+                                f2.Return = Utility.GetReturnDate().AddDays(i+1);
+
+                                destinations.Add(f2);
+                            
                         }
                     }
 
@@ -89,6 +111,7 @@ namespace TestScraper
             Flight flight = new Flight();
             List<decimal> prices = flight.ScrapePrice();
             
+
             try
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
