@@ -58,7 +58,9 @@
     <Compile Include="DAL\SurfHeightSql.cs" />
     <Compile Include="ScrapeMethods\Flight.cs" />
     <Compile Include="ScrapeMethods\Surf.cs" />
-    <Compile Include="UtilityMethods\Utility.cs" />
+    <Compile Include="UtilityMethods\DateAndTime.cs" />
+    <Compile Include="UtilityMethods\Email.cs" />
+    <Compile Include="UtilityMethods\Percent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

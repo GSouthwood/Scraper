@@ -10,9 +10,8 @@ namespace SurfScraper.ScrapeMethods
 {
     public class Surf
     {
-        private string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=Scraper;Integrated Security=True";
 
-        ////Scrape data from magic seaweed for surf height for 10 day forecast
+        //Scrape data from magic seaweed for surf height for 10 day forecast
         //public List<decimal> ScrapeSurfHeight()
         //{
         //    //SurfHeight Data Access Object for methods
@@ -71,7 +70,8 @@ namespace SurfScraper.ScrapeMethods
 
         //Scrape data from magic seaweed for surf height for 10 day forecast
 
-        public List<decimal> ScrapeSurfHeight()
+
+        public List<decimal> ScrapeSurfHeight(string connectionString)
         {
             //SurfHeight Data Access Object for methods
             SurfHeightSql surfDal = new SurfHeightSql(connectionString);
@@ -86,48 +86,49 @@ namespace SurfScraper.ScrapeMethods
             int counter = 0;
 
             HtmlWeb web = new HtmlWeb();
+            //for surf nodes
             List<HtmlNode> surfSize = new List<HtmlNode>();
+
+            //for surf sizes
             List<decimal> surf = new List<decimal>();
+
             foreach (var url in spots)
             {
-                
+
                 //if .Contains("s") accounts for when the page actually misreads the td element.
                 HtmlDocument doc = web.Load(url.ToString());
                 try
                 {
-                    
-                    if (url.ToString().Equals("https://magicseaweed.com/Uluwatu-Surf-Report/565/") 
+
+                    if (url.ToString().Equals("https://magicseaweed.com/Uluwatu-Surf-Report/565/")
                         || url.ToString().Equals("https://magicseaweed.com/Shonan-Surf-Report/806/"))
                     {
-                        //*[@id="msw-js-fc"]/div[2]/div/table/tbody/tr[2]/td[3]/span
                         surfSize = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[3]/span").ToList();
                     }
                     else
                     {
-                    surfSize = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[2]/span").ToList();
-                        if (surfSize[0].InnerText.Contains("s"))
-                        {
-                            surfSize = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[3]/span").ToList();
-                        }
+                        surfSize = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[2]/span").ToList();
+
                     }
-                    
+
                 }
-                
+
 
                 catch (Exception ex)
                 {
-                    
+
                     throw;
                 }
+
                 foreach (var item in surfSize)
                 {
                     counter++;
-                    
+
                     //for wave heights with format xx-xxft
                     if (item.InnerText.Length == 11)
                     {
                         surf.Add((Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') + 1, 2)) +
-                            Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') - 2, 2)))/2);
+                            Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') - 2, 2))) / 2);
                     }
 
                     //for wave heights with format x-xxft
@@ -135,7 +136,7 @@ namespace SurfScraper.ScrapeMethods
                     {
 
                         surf.Add((Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') + 1, 2)) +
-                            Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') - 1, 1)))/2);
+                            Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') - 1, 1))) / 2);
 
                     }
 
@@ -144,7 +145,7 @@ namespace SurfScraper.ScrapeMethods
                     {
 
                         surf.Add((Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') + 1, 1)) +
-                            Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') - 1, 1)))/2);
+                            Decimal.Parse(item.InnerText.Substring(item.InnerText.IndexOf('-') - 1, 1))) / 2);
 
                     }
 
@@ -179,57 +180,216 @@ namespace SurfScraper.ScrapeMethods
                     //for wave heights that fail to pass bools
                     else
                     {
+                        Email.SendEmailFailure("Surf data failure", $"Failed to scrape surf height for node {counter}");
                         Console.WriteLine($"Failed to scrape surf height for node {counter}");
-                        
+
                     }
 
                 }
+
                 if (surf.Count == 79 * spots.Count)
                 {
+                    
                     Console.WriteLine("Complete surf data.");
                 }
                 else
                 {
+                    
                     Console.WriteLine($"{79 * spots.Count - counter} data nodes to go...");
                 }
-
+                
             }
-
+            Email.SendEmail("Surf data overview", $"SurfScraper got " +
+                $"{((double)(surf.Count / (spots.Count * 79)) * 100)}% of all surf data.");
             return surf;
         }
 
-
-        ////Method for getting weather data from magicseaweed 
-        ////buggy
-
-        //public List<string> LogWeatherData()
+        //public List<int> ScrapeWindDirection(string connectionString)
         //{
+        //    //SurfHeight Data Access Object for methods
+        //    SurfHeightSql surfDal = new SurfHeightSql(connectionString);
+
+        //    //urls for scraping
+        //    List<SurfUrl> spots = surfDal.LoadSpotsToScrape();
 
         //    HtmlWeb web = new HtmlWeb();
-        //    List<HtmlNode> weatherNodes = new List<HtmlNode>();
-        //    List<string> weather = new List<string>();
-        //    HtmlAgilityPack.HtmlDocument doc = web.Load("https://magicseaweed.com/Uluwatu-Surf-Report/565/");
-        //    try
+
+
+        //    //for wind nodes
+        //    List<HtmlNode> windDirection = new List<HtmlNode>();
+
+        //    //for wind direction degrees
+        //    List<int> wind = new List<int>();
+
+        //    foreach (var url in spots)
         //    {
-        //        weatherNodes = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[12]/span").ToList();
-        //        if (weatherNodes[0].InnerText.Contains("s"))
+
+        //        //if .Contains("s") accounts for when the page actually misreads the td element.
+        //        HtmlDocument doc = web.Load(url.ToString());
+        //        try
         //        {
-        //            weatherNodes = doc.DocumentNode.SelectNodes("//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr/td[13]/span").ToList();
+
+
+        //            if (url.ToString().Equals("https://magicseaweed.com/Uluwatu-Surf-Report/565/")
+        //                || url.ToString().Equals("https://magicseaweed.com/Shonan-Surf-Report/806/"))
+        //            {
+
+        //                for (int i = 2; i < 71; i += 10)
+        //                {
+        //                    if (i == 70)
+        //                    {
+        //                        for (int k = i; k < i + 7; k++)
+        //                        {
+
+
+        //                            if (!doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[13]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[13]"));
+        //                            }
+        //                            else if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[13]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[11]"));
+        //                            }
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        for (int k = i; k < i + 8; k++)
+        //                        {
+
+        //                            //*[@id="msw-js-fc"]/div[2]/div/table/tbody/tr[2]/td[11]
+        //                            if (!doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[13]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[13]"));
+        //                            }
+        //                            else if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[13]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[11]"));
+        //                            }
+        //                        }
+        //                    }
+        //                }
+
+
+        //            }
+        //            else if (url.ToString().Equals("https://magicseaweed.com/Snapper-Rocks-Surf-Report/1014/"))
+        //            {
+        //                for (int i = 2; i < 93; i += 10)
+        //                {
+
+        //                    if (i == 92)
+        //                    {
+
+        //                        for (int k = i; k < i + 7; k++)
+        //                        {
+
+        //                            if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]") == null)
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[10]"));
+        //                            }
+
+        //                            else if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[12]"));
+        //                            }
+        //                            else
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]"));
+        //                            }
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+
+
+        //                        for (int k = i; k < i + 8; k++)
+        //                        {
+        //                            if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]") == null)
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[10]"));
+        //                            }
+
+        //                            else if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[12]"));
+        //                            }
+        //                            else
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]"));
+        //                            }
+
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+
+        //                for (int i = 2; i < 93; i += 10)
+        //                {
+
+        //                    if (i == 92)
+        //                    {
+
+        //                        for (int k = i; k < i + 7; k++)
+        //                        {
+
+        //                            //*[@id="msw-js-fc"]/div[2]/div/table/tbody/tr[94]/td[14]
+        //                            if (!doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]"));
+        //                            }
+        //                            else if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[12]"));
+        //                            }
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+
+
+        //                        for (int k = i; k < i + 8; k++)
+        //                        {
+
+
+        //                            if (!doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]"));
+        //                            }
+        //                            else if (doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[14]").InnerHtml.Contains("<span"))
+        //                            {
+        //                                windDirection.Add(doc.DocumentNode.SelectSingleNode($"//*[@id='msw-js-fc']/div[2]/div/table/tbody/tr[{k}]/td[12]"));
+        //                            }
+        //                        }
+        //                    }
+        //                }
+
+        //            }
+
         //        }
+
+
+        //        catch (Exception ex)
+        //        {
+
+        //            throw;
+        //        }
+
+
+        //        foreach (var item in windDirection)
+        //        {
+
+        //            //"  <i class=\"svg-icon svg-wind-icon svg-wind-icon-light\" style=\"-webkit-transform: rotate(298deg); -ms-transform: rotate(298deg); transform: rotate(298deg);\"></i> <i class=\"msw-saw-300 msw-swa\"></i>  "
+        //            wind.Add(Int32.Parse(item.InnerHtml.Substring(item.InnerHtml.IndexOf('(') + 1,
+        //                (item.InnerHtml.IndexOf('d', item.InnerHtml.IndexOf('('))) - (item.InnerHtml.IndexOf('(') + 1))));
+        //        }
+
+
         //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw;
-        //    }
-        //    foreach (var item in weatherNodes)
-        //    {
-        //        weather.Add(item.InnerText);
-        //    }
 
-
-        //    return weather;
-
-
+        //    return wind;
         //}
+
     }
 }

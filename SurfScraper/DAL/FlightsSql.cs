@@ -29,7 +29,7 @@ namespace TestScraper
         //Take in all of the destination data from Scraper and load into a list of skyscanner URL's to scrape
         //any number of destinations can be loaded from database without having to change this method
         //which means the method for scraping data will never have to change, only the database
-        public List<FlightUrl> LoadDestinationsToScrape()
+        public List<FlightUrl> LoadDestinationsToScrape(string connectionString)
         {
             List<FlightUrl> destinations = new List<FlightUrl>();
 
@@ -56,13 +56,13 @@ namespace TestScraper
                                 f.LocationName = Convert.ToString(reader["name"]);
                                 f.LocationId = Convert.ToInt32(reader["location_id"]);
                                 f.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
-                                f.DepartureDate = Utility.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
-                                f.ReturnDate = Utility.GetReturnDate().AddDays(i).ToString("yyMMdd");
+                                f.DepartureDate = DateAndTime.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
+                                f.ReturnDate = DateAndTime.GetReturnDate().AddDays(i).ToString("yyMMdd");
                                 f.SkyScannerVariables = "?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&" +
                                     "cabinclass=economy&rtn=1&preferdirects=false&" +
                                     "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
-                                f.Depart = Utility.GetDepartureDate().AddDays(i);
-                                f.Return = Utility.GetReturnDate().AddDays(i);
+                                f.Depart = DateAndTime.GetDepartureDate().AddDays(i);
+                                f.Return = DateAndTime.GetReturnDate().AddDays(i);
 
                                 destinations.Add(f);
 
@@ -75,13 +75,13 @@ namespace TestScraper
                                 f2.LocationName = Convert.ToString(reader["name"]);
                                 f2.LocationId = Convert.ToInt32(reader["location_id"]);
                                 f2.SkyScannerDomainName = "https://www.skyscanner.com/transport/flights/lax/";
-                                f2.DepartureDate = Utility.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
-                                f2.ReturnDate = Utility.GetReturnDate().AddDays(i+1).ToString("yyMMdd");
+                                f2.DepartureDate = DateAndTime.GetDepartureDate().AddDays(i).ToString("/yyMMdd/");
+                                f2.ReturnDate = DateAndTime.GetReturnDate().AddDays(i+1).ToString("yyMMdd");
                                 f2.SkyScannerVariables = "?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&" +
                                     "cabinclass=economy&rtn=1&preferdirects=false&" +
                                     "outboundaltsenabled=false&inboundaltsenabled=false&ref=home#results";
-                                f2.Depart = Utility.GetDepartureDate().AddDays(i);
-                                f2.Return = Utility.GetReturnDate().AddDays(i+1);
+                                f2.Depart = DateAndTime.GetDepartureDate().AddDays(i);
+                                f2.Return = DateAndTime.GetReturnDate().AddDays(i+1);
 
                                 destinations.Add(f2);
                             
@@ -90,9 +90,9 @@ namespace TestScraper
 
                 }
             }
-            catch (SqlException ex)
+            catch (SqlException e)
             {
-
+                Email.SendEmailFailure(e.ToString(), "Failed during: public List<FlightUrl> LoadDestinationsToScrape()");
                 throw;
             }
 
@@ -105,11 +105,11 @@ namespace TestScraper
         public void WritePrices()
         {
             FlightsSql flightsSql = new FlightsSql(connectionString);
-            List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape();
+            List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape(connectionString);
 
             //Flight object for flight methods
             Flight flight = new Flight();
-            List<decimal> prices = flight.ScrapePrice();
+            List<decimal> prices = flight.ScrapePrice(DateAndTime.CurrentDateTime(), connectionString);
             
 
             try
@@ -128,21 +128,24 @@ namespace TestScraper
                         cmd.Parameters.AddWithValue("@departureDate", destinations[i].Depart);
                         cmd.Parameters.AddWithValue("@returnDate", destinations[i].Return);
                         cmd.Parameters.AddWithValue("@destinationCode", destinations[i].DestinationAirportCode);
-                        cmd.Parameters.AddWithValue("@logTime", Utility.CurrentDateTime());
+                        cmd.Parameters.AddWithValue("@logTime", DateAndTime.CurrentDateTime());
                         int worked = cmd.ExecuteNonQuery();
                         if (worked > 0)
                         {
                             Console.WriteLine($"Input {worked} row");
                         }
                         
+                       
+                          
+                        
                         
                         
                     }
                 }
             }
-            catch (SqlException ex)
+            catch (SqlException e)
             {
-
+                Email.SendEmailFailure(e.ToString(), "Failed during: public void WritePrices()");
                 throw;
             }
         }

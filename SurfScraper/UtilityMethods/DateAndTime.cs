@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Net.Mail;
 
 
 namespace SurfScraper.UtilityMethods
 {
-    public class Utility
+    public class DateAndTime
+
     {
         public static List<TimeSpan> LoadTimes()
         {
@@ -27,6 +30,6 @@ namespace SurfScraper.UtilityMethods
         {
             return DateTime.Now.AddDays(7);
         }
-        
+ 
     }
 }

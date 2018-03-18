@@ -4,14 +4,13 @@ using System.Windows.Forms;
 using System.Threading;
 using SurfScraper.Model;
 using TestScraper;
+using SurfScraper.UtilityMethods;
 
 namespace SurfScraper.ScrapeMethods
 {
     public class Flight
     {
         
-
-        private string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=Scraper;Integrated Security=True";
 
 
         //scrape prices from SkyScanner
@@ -83,16 +82,17 @@ namespace SurfScraper.ScrapeMethods
         //        return prices;
         //    }
         //}
-        public List<decimal> ScrapePrice()
+        public List<decimal> ScrapePrice(DateTime now, string connectionString)
         {
             FlightsSql flightsSql = new FlightsSql(connectionString);
-            List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape();
+            List<FlightUrl> destinations = flightsSql.LoadDestinationsToScrape(connectionString);
 
             int tryCount = 0;
             string text = "";
             decimal price = 0;
             bool isWorking = false;
             int count = 0;
+            int failureCount = 0;
             List<decimal> prices = new List<decimal>();
 
             for (int i = 0; i < 50; i++)
@@ -116,42 +116,60 @@ namespace SurfScraper.ScrapeMethods
                             tryCount++;
                         }
                         
-                        if (wb.Document.GetElementsByTagName("tbody").Count > 0)
-                        {
-                            isWorking = true;
-                            tryCount = 0;
-                        }
-                        else if (tryCount == 5)
+                        
+                        if (tryCount == 5)
                         {
                             
                             count++;
                             isWorking = true;
+                            Email.SendEmailFailure("Flight data failure", $"Failed at " +
+                                $"{count}/{destinations.Count} - {destinations[i].DestinationAirportCode} after {tryCount} attempts.");
                             Console.WriteLine($"Failed at {count}/{destinations.Count} after {tryCount} attempts");
+                            failureCount++;
                             tryCount = 0;
                         }
-                    }
-
-
-                    if (wb.Document.GetElementsByTagName("tbody").Count > 0)
-                    {
-
-                        text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, 7);
-                        if (text.Contains(" "))
+                        else if (wb.Document.GetElementsByTagName("tbody").Count > 0)
                         {
-                            int limit = text.IndexOf(" ");
-                            text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, limit);
-                            price = Decimal.Parse(text);
-                        }
+                            isWorking = true;
+                            tryCount = 0;
 
-                        prices.Add(price);
-                        count++;
-                        Console.WriteLine($"{count}/{destinations.Count} Done.");
+                            if (wb.Document.GetElementsByTagName("tbody").Count > 0)
+                            {
+
+                                text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, 7);
+                                if (text.Contains(" "))
+                                {
+                                    int limit = text.IndexOf(" ");
+                                    text = wb.Document.GetElementsByTagName("tbody")[0].InnerText.Substring(5, limit);
+                                    price = Decimal.Parse(text);
+                                }
+
+                                prices.Add(price);
+                                count++;
+                                Console.WriteLine($"{count}/{destinations.Count} Done.");
+                                if (DateAndTime.CurrentDateTime().Minute - now.Minute >= 30)
+                                {
+                                    Email.SendEmail($"Flight data update at {DateAndTime.CurrentDateTime()}", 
+                                        $"SurfScraper has gotten {Percent.DataAvailableVsPercentScraped(count, failureCount, 50)}% of all flight data so far.");
+                                }
+                                if (DateAndTime.CurrentDateTime().Minute - now.Minute >= 60)
+                                {
+                                    Email.SendEmail($"Flight data update at {DateAndTime.CurrentDateTime()}", 
+                                        $"SurfScraper has gotten {Percent.DataAvailableVsPercentScraped(count, failureCount, 50)}% of all flight data so far.");
+                                }
+                            }
+                        }
                     }
-                    
+
+
+
+                   
 
                 }
 
             }
+            Email.SendEmail("Flight data overview", $"SurfScraper got " +
+                $"{Percent.DataAvailableVsPercentScraped(count, failureCount, 50)}% of all flight data.");
             return prices;
         }
     }
